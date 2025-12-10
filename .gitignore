@@ -1,0 +1,111 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+out/
+build/
+*.tgz
+
+# Code coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Dotenv environment variable files
+.env
+.env.*
+!.env.example
+
+# Caches
+.eslintcache
+.cache
+*.tsbuildinfo
+.turbo/
+.parcel-cache/
+
+# Session data (contains WhatsApp credentials - SENSITIVE!)
+.whatsapp-claude-agent/
+session/
+auth_info*/
+creds.json
+
+# Bun
+bun.lock
+bun.lockb
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# IntelliJ based IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VS Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# Finder (macOS)
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+.fuse_hidden*
+.nfs*
+
+# Vim
+*.sw?
+*.swo
+*~
+.netrwhist
+
+# Emacs
+\#*\#
+.#*
+
+# Temp files
+*.tmp
+*.temp
+*.bak
+*.local
+tmp/
+temp/
+
+# Test output
+test-results/
+playwright-report/
+.vitest/
+
+# Claude Code
+.claude/
+CLAUDE.md
+
+# Debug
+.debug/
+*.heapsnapshot
