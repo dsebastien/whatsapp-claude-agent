@@ -13,17 +13,41 @@ Bridge WhatsApp with Claude Code - interact with your files via WhatsApp message
 
 ## Installation
 
+### Download Pre-built Binary (Recommended)
+
+**Option 1: Download from GitHub Releases (easiest)**
+
+Visit the [GitHub Releases page](https://github.com/dsebastien/whatsapp-claude-agent/releases) and download the appropriate binary for your platform:
+
+| Platform              | File                                    |
+| --------------------- | --------------------------------------- |
+| Linux (x64)           | `whatsapp-claude-agent-linux-x64`       |
+| macOS (Apple Silicon) | `whatsapp-claude-agent-darwin-arm64`    |
+| macOS (Intel)         | `whatsapp-claude-agent-darwin-x64`      |
+| Windows (x64)         | `whatsapp-claude-agent-windows-x64.exe` |
+
+After downloading, make it executable (Linux/macOS):
+
 ```bash
-# Clone the repo
-git clone https://github.com/yourusername/whatsapp-claude-agent.git
-cd whatsapp-claude-agent
-
-# Install dependencies
-bun install
-
-# Run in development mode
-bun run dev -- -w YOUR_PHONE_NUMBER
+chmod +x whatsapp-claude-agent-*
 ```
+
+**Option 2: Download via command line**
+
+```bash
+# Download (example for Linux x64)
+curl -L -o whatsapp-claude-agent https://github.com/dsebastien/whatsapp-claude-agent/releases/latest/download/whatsapp-claude-agent-linux-x64
+
+# Make executable
+chmod +x whatsapp-claude-agent
+
+# Run
+./whatsapp-claude-agent -w "+1234567890"
+```
+
+### Build from Source
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for instructions on building from source.
 
 ## Usage
 
@@ -107,34 +131,6 @@ You can create a config file at `~/.whatsapp-claude-agent/config.json`:
     "model": "claude-sonnet-4-20250514",
     "verbose": false
 }
-```
-
-## Development
-
-```bash
-# Run in dev mode
-bun run dev
-
-# Type checking
-bun run tsc
-
-# Lint
-bun run lint
-
-# Format
-bun run format
-
-# Commit (interactive)
-bun run commit
-```
-
-## Building
-
-```bash
-# Build single executable
-bun run build
-
-# The output is in dist/cli.js
 ```
 
 ## Security Considerations
