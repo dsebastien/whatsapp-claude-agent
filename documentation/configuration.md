@@ -41,12 +41,12 @@ Valid keys for set/get: whitelist, directory, mode, sessionPath, model, maxTurns
 ## Sources (Priority Order)
 
 1. **CLI arguments** (highest) — override everything
-2. **Config file** — `{directory}/config.json` (working directory)
+2. **Config file** — `{directory}/.whatsapp-claude-agent.json` (working directory)
 3. **Built-in defaults** (lowest)
 
 ## Config File Location
 
-Config is loaded from the working directory: `{directory}/config.json`
+Config is loaded from the working directory: `{directory}/.whatsapp-claude-agent.json`
 
 Specify custom path: `-c, --config <path>`
 
@@ -112,14 +112,14 @@ ConfigSchema = z.object({
 // src/cli/config.ts
 
 loadConfigFile(configPath?: string, directory?: string): Partial<Config>
-// Loads from configPath or {directory}/config.json
+// Loads from configPath or {directory}/.whatsapp-claude-agent.json
 
 saveConfigFile(config: Config, configPath?: string): string
-// Saves to path or {config.directory}/config.json
+// Saves to path or {config.directory}/.whatsapp-claude-agent.json
 // Returns saved path
 
 getLocalConfigPath(directory?: string): string
-// {directory}/config.json
+// {directory}/.whatsapp-claude-agent.json
 
 generateConfigTemplate(whitelist: string[]): string
 // Returns JSON string for template

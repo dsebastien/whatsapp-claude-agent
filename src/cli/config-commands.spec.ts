@@ -32,14 +32,14 @@ describe('config file utilities', () => {
     })
 
     describe('getLocalConfigPath', () => {
-        test('returns config.json in specified directory', () => {
+        test('returns .whatsapp-claude-agent.json in specified directory', () => {
             const path = getLocalConfigPath('/some/path')
-            expect(path).toBe('/some/path/config.json')
+            expect(path).toBe('/some/path/.whatsapp-claude-agent.json')
         })
 
-        test('returns config.json in cwd when no directory specified', () => {
+        test('returns .whatsapp-claude-agent.json in cwd when no directory specified', () => {
             const path = getLocalConfigPath()
-            expect(path).toEndWith('/config.json')
+            expect(path).toEndWith('/.whatsapp-claude-agent.json')
         })
     })
 
@@ -114,7 +114,7 @@ describe('config file utilities', () => {
             expect(content.model).toBe('claude-sonnet-4-20250514')
         })
 
-        test('saves to directory/config.json when no path specified', () => {
+        test('saves to directory/.whatsapp-claude-agent.json when no path specified', () => {
             const config: Config = {
                 whitelist: ['+1234567890'],
                 directory: testDir,
@@ -132,7 +132,7 @@ describe('config file utilities', () => {
 
             const savedPath = saveConfigFile(config)
 
-            expect(savedPath).toBe(join(testDir, 'config.json'))
+            expect(savedPath).toBe(join(testDir, '.whatsapp-claude-agent.json'))
             expect(existsSync(savedPath)).toBe(true)
         })
 

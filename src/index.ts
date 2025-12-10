@@ -126,7 +126,7 @@ async function main() {
 
     async function sendStartupAnnouncement() {
         const groupConfig = whatsapp.getGroupConfig()
-        const { name, host, folder } = config.agentIdentity
+        const { name, host } = config.agentIdentity
 
         if (groupConfig) {
             // Group mode: Send announcement to the group

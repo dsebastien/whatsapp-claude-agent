@@ -71,7 +71,10 @@ export function createConfigCommand(): Command {
     const config = new Command('config')
         .description('Manage configuration without running the agent')
         .option('-c, --config <path>', 'Config file path')
-        .option('-d, --directory <path>', 'Working directory (for local config.json)')
+        .option(
+            '-d, --directory <path>',
+            'Working directory (for local .whatsapp-claude-agent.json)'
+        )
 
     // config show
     config

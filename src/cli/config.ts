@@ -5,7 +5,7 @@ import { ConfigSchema, type Config, type SettingSource } from '../types.ts'
 import { resolveModelShorthand } from '../claude/utils.ts'
 import { generateAgentIdentity, normalizeAgentName } from '../utils/agent-name.ts'
 
-const CONFIG_FILE_NAME = 'config.json'
+const CONFIG_FILE_NAME = '.whatsapp-claude-agent.json'
 
 function expandPath(path: string): string {
     if (path.startsWith('~')) {
@@ -57,7 +57,7 @@ const SAVEABLE_KEYS: SaveableConfigKey[] = [
 
 /**
  * Save configuration to a file.
- * By default saves to the working directory (config.directory/config.json).
+ * By default saves to the working directory (config.directory/.whatsapp-claude-agent.json).
  */
 export function saveConfigFile(config: Config, configPath?: string): string {
     const path = configPath || getLocalConfigPath(config.directory)
@@ -99,7 +99,7 @@ export function generateConfigTemplate(whitelist: string[]): string {
 /**
  * Load config from a file.
  * If configPath is provided, loads from that path.
- * Otherwise, loads from the working directory config.json.
+ * Otherwise, loads from the working directory .whatsapp-claude-agent.json.
  */
 export function loadConfigFile(configPath?: string, directory?: string): Partial<Config> {
     const path = configPath || getLocalConfigPath(directory)

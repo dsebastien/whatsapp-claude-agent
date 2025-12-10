@@ -333,7 +333,7 @@ export class WhatsAppClient extends EventEmitter {
                     groupJid = await this.socket.groupAcceptInvite(inviteCode)
                 }
             }
-        } catch (error) {
+        } catch {
             // groupGetInviteInfo failed, try direct join
             this.logger.debug(`Could not get invite info, attempting direct join`)
             try {

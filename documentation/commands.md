@@ -89,14 +89,14 @@ Setting prompt clears session (context changes).
 
 ## Configuration
 
-| Command                                | Handler                 | Effect                            |
-| -------------------------------------- | ----------------------- | --------------------------------- |
-| `/config`                              | `handleConfigCommand()` | Show runtime config               |
-| `/config show`, `/config list`         | —                       | Show runtime config               |
-| `/config path`                         | —                       | Show config file location         |
-| `/config save`                         | —                       | Save to `{directory}/config.json` |
-| `/config generate`, `/config template` | —                       | Generate template                 |
-| `/reload`                              | `handleReloadCommand()` | Reload & apply config from disk   |
+| Command                                | Handler                 | Effect                                            |
+| -------------------------------------- | ----------------------- | ------------------------------------------------- |
+| `/config`                              | `handleConfigCommand()` | Show runtime config                               |
+| `/config show`, `/config list`         | —                       | Show runtime config                               |
+| `/config path`                         | —                       | Show config file location                         |
+| `/config save`                         | —                       | Save to `{directory}/.whatsapp-claude-agent.json` |
+| `/config generate`, `/config template` | —                       | Generate template                                 |
+| `/reload`                              | `handleReloadCommand()` | Reload & apply config from disk                   |
 
 ## Session Invalidation
 
