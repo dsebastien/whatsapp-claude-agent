@@ -78,6 +78,8 @@ async function main() {
 
             case 'ready':
                 logger.info('WhatsApp client ready. Listening for messages...')
+                // Send startup announcement to all whitelisted numbers
+                await sendStartupAnnouncement()
                 break
 
             case 'message':
@@ -100,6 +102,26 @@ async function main() {
             await handlePermissionRequest(event.request)
         }
     })
+
+    async function sendStartupAnnouncement() {
+        const announcement = `🤖 *WhatsApp Claude Agent Online*
+
+📁 Working directory: \`${config.directory}\`
+🔐 Mode: ${config.mode}
+🤖 Model: ${config.model}
+
+Type */help* for available commands.`
+
+        for (const phone of config.whitelist) {
+            const jid = phoneToJid(phone)
+            try {
+                await whatsapp.sendMessage(jid, announcement)
+                logger.info(`Startup announcement sent to ${phone}`)
+            } catch (error) {
+                logger.error(`Failed to send startup announcement to ${phone}: ${error}`)
+            }
+        }
+    }
 
     async function handleMessage(message: IncomingMessage) {
         logger.debug(`Processing message from ${message.from}`)
