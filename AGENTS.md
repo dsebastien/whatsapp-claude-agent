@@ -11,20 +11,28 @@
 
 ## Development Workflow
 
-When starting work on this codebase, ALWAYS run these watch commands in the background:
+**CRITICAL**: Before making ANY code changes, start the TypeScript watch process in the background:
 
 ```bash
-bun run tsc:watch
-bun test --watch
+bun run tsc:watch &
 ```
 
-This ensures type errors and test failures are caught immediately as you make changes. Both commands MUST be running in the background at all times during development.
+This is MANDATORY. The watch process catches type errors immediately as you edit. Check the output after each edit to catch errors early. If you see TypeScript errors, fix them before moving on.
 
-After editing code, always run the formatter to ensure consistent code style:
+Optionally, also run tests in watch mode:
+
+```bash
+bun test --watch &
+```
+
+After editing code, always run the formatter and linter:
 
 ```bash
 bun run format
+bun run lint
 ```
+
+Both commands are **MANDATORY** after code changes. Fix any lint errors before proceeding.
 
 ## CLI and Config Parity
 
