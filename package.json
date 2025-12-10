@@ -1,6 +1,6 @@
 {
     "name": "whatsapp-claude-agent",
-    "version": "1.5.0",
+    "version": "1.5.1",
     "description": "Bridge WhatsApp with Claude Code - interact with your files via WhatsApp messages",
     "author": "Sébastien Dubois",
     "license": "MIT",

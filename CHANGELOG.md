@@ -1,3 +1,12 @@
+## [1.5.1](https://github.com/dsebastien/whatsapp-claude-agent/compare/1.5.0...1.5.1) (2025-12-10)
+
+### Features
+
+* **all:** improved config init option and remove the need to pass --whitelist or -w ([af7084d](https://github.com/dsebastien/whatsapp-claude-agent/commit/af7084db4df5cb743650f6a474cc26476f027a7c))
+
+### Bug Fixes
+
+* **all:** whitelist is not mandatory when running config init ([a89e9e1](https://github.com/dsebastien/whatsapp-claude-agent/commit/a89e9e12f1ff989ff6463348016a871dbea96454))
 ## [1.5.0](https://github.com/dsebastien/whatsapp-claude-agent/compare/1.4.0...1.5.0) (2025-12-10)
 
 ### Features
