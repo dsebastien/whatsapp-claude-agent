@@ -1,3 +1,15 @@
+## [1.4.0](https://github.com/dsebastien/whatsapp-claude-agent/compare/1.3.0...1.4.0) (2025-12-10)
+
+### Features
+
+* **all:** added a slash command to reload the configuration ([616660b](https://github.com/dsebastien/whatsapp-claude-agent/commit/616660bca1c9dbc6dfb329b747892470f73ec955))
+* **all:** added CLI argument to update ([48d7f1b](https://github.com/dsebastien/whatsapp-claude-agent/commit/48d7f1b282f7a81f2a6807add744253f6aebc483))
+* **all:** added install script ([0bf49f7](https://github.com/dsebastien/whatsapp-claude-agent/commit/0bf49f732e4f2e221d5e9c852bf4602a0465849d))
+* **all:** added support for joining a whatsapp group ([71fe59c](https://github.com/dsebastien/whatsapp-claude-agent/commit/71fe59c37fdf7c5b49463e7cc746489152fab1e6))
+* **all:** added support for updating in place with the update script ([45590aa](https://github.com/dsebastien/whatsapp-claude-agent/commit/45590aae3050e1bd7b4686345f20f2e4d43a6526))
+* **all:** changed the config file name to \".whatsapp-claude-agent.json\" ([b52a569](https://github.com/dsebastien/whatsapp-claude-agent/commit/b52a569fb3cfde7d550cd5765c8334fcd3972aa7))
+* **all:** display download progress during install ([252e567](https://github.com/dsebastien/whatsapp-claude-agent/commit/252e5676fb08829383e48838c5919bd9e7407cfb))
+* **all:** improved group support and commands ([484d6b9](https://github.com/dsebastien/whatsapp-claude-agent/commit/484d6b962a625da0bf95e88a5f79910f2b42bc22))
 ## [1.3.0](https://github.com/dsebastien/whatsapp-claude-agent/compare/1.2.0...1.3.0) (2025-12-10)
 
 ### Features
