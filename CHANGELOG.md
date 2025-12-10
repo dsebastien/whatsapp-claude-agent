@@ -1,3 +1,14 @@
+## [1.5.0](https://github.com/dsebastien/whatsapp-claude-agent/compare/1.4.0...1.5.0) (2025-12-10)
+
+### Features
+
+* **all:** added progress bar for updates ([b7bc69a](https://github.com/dsebastien/whatsapp-claude-agent/commit/b7bc69a532ed3e07343b99027f1835dd96e74afc))
+* **all:** reduce release executable sizes ([bf8db59](https://github.com/dsebastien/whatsapp-claude-agent/commit/bf8db5922002b951854c001402b9404b50251632))
+
+### Bug Fixes
+
+* **all:** better handle update on windows ([a967fd8](https://github.com/dsebastien/whatsapp-claude-agent/commit/a967fd89bea95536c9867287b084eb5b0ecfe03a))
+* **all:** remove sourcemaps from releases ([5d8ab82](https://github.com/dsebastien/whatsapp-claude-agent/commit/5d8ab82163123170ba2b437b441a52a2af680a99))
 ## [1.4.0](https://github.com/dsebastien/whatsapp-claude-agent/compare/1.3.0...1.4.0) (2025-12-10)
 
 ### Features
