@@ -8,6 +8,12 @@ bun run tsc:watch
 
 This ensures type errors are caught immediately as you make changes.
 
+After editing code, always run the formatter to ensure consistent code style:
+
+```bash
+bun run format
+```
+
 ## Bun Runtime
 
 Default to using Bun instead of Node.js.
