@@ -175,7 +175,9 @@ export class WhatsAppClient extends EventEmitter {
             this.logger.info(`Processing missed message from ${msg.from}`)
         }
 
-        this.logger.info(`Message from ${msg.from}: "${msg.text.slice(0, 50)}${msg.text.length > 50 ? '...' : ''}"`)
+        this.logger.info(
+            `Message from ${msg.from}: "${msg.text.slice(0, 50)}${msg.text.length > 50 ? '...' : ''}"`
+        )
         this.emit('event', { type: 'message', message: msg } as AgentEvent)
     }
 
