@@ -1,4 +1,5 @@
-import { existsSync, unlinkSync, renameSync, chmodSync } from 'fs'
+import { existsSync, unlinkSync, renameSync, chmodSync, writeFileSync } from 'fs'
+import { spawn } from 'child_process'
 import { buildInfo } from '../build-info.ts'
 
 const REPO = 'dsebastien/whatsapp-claude-agent'
@@ -98,6 +99,31 @@ function getExecutablePath(): string {
     return mainScript
 }
 
+/**
+ * On Windows, we can't replace a running executable.
+ * Create a batch script that waits for the process to exit, then replaces the file.
+ */
+function createWindowsUpdateScript(execPath: string, tempPath: string, version: string): string {
+    const batchPath = `${execPath}.update.bat`
+    const batchContent = `@echo off
+echo Waiting for process to exit...
+timeout /t 2 /nobreak >nul
+:retry
+del "${execPath}" 2>nul
+if exist "${execPath}" (
+    timeout /t 1 /nobreak >nul
+    goto retry
+)
+move "${tempPath}" "${execPath}"
+echo.
+echo Successfully updated to ${version}!
+echo You can now restart the application.
+del "%~f0"
+`
+    writeFileSync(batchPath, batchContent)
+    return batchPath
+}
+
 export async function runUpdate(): Promise<never> {
     console.log('Checking for updates...')
 
@@ -161,6 +187,25 @@ export async function runUpdate(): Promise<never> {
             chmodSync(tempPath, 0o755)
         }
 
+        // Windows: Can't replace running executable, use batch script
+        if (os === 'windows') {
+            console.log('Creating update script...')
+            const batchPath = createWindowsUpdateScript(execPath, tempPath, latestVersion)
+
+            console.log(`\nUpdate downloaded. Running update script...`)
+            console.log('The application will now exit to complete the update.')
+
+            // Start the batch script detached
+            spawn('cmd.exe', ['/c', batchPath], {
+                detached: true,
+                stdio: 'ignore',
+                windowsHide: false
+            }).unref()
+
+            process.exit(0)
+        }
+
+        // Unix: Replace directly
         // Backup current executable
         if (existsSync(execPath)) {
             console.log('Creating backup...')
