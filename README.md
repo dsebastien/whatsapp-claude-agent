@@ -59,7 +59,7 @@ Options:
   -m, --mode <mode>              Permission mode (see below)
   -w, --whitelist <numbers>      Comma-separated phone numbers (required)
   -s, --session <path>           WhatsApp session directory
-  --model <model>                Claude model to use
+  --model <model>                Claude model to use (supports shorthands)
   --max-turns <n>                Maximum conversation turns
   --process-missed               Process messages received while offline
   --no-process-missed            Don't process messages received while offline
@@ -112,6 +112,11 @@ The examples below use `./whatsapp-claude-agent` as a placeholder. Replace with 
 
 # Resume and fork (create a new branch from the session)
 ./whatsapp-claude-agent -w "+1234567890" --resume <session-id> --fork
+
+# Use a specific model (with shorthand)
+./whatsapp-claude-agent -w "+1234567890" --model opus
+./whatsapp-claude-agent -w "+1234567890" --model sonnet-4
+./whatsapp-claude-agent -w "+1234567890" --model haiku
 ```
 
 ## WhatsApp Commands
@@ -131,6 +136,30 @@ Once connected, you can send these commands via WhatsApp:
 | `/fork`          | Fork current session (create a branch)    |
 | `/cd`            | Show current working directory            |
 | `/cd <path>`     | Change working directory (clears session) |
+
+### Model Commands
+
+| Command         | Description                 |
+| --------------- | --------------------------- |
+| `/model`        | Show current model          |
+| `/model <name>` | Switch to a different model |
+| `/models`       | List all available models   |
+
+**Model Shorthands:** You can use shorthands instead of full model IDs:
+
+| Shorthand                              | Resolves To                |
+| -------------------------------------- | -------------------------- |
+| `opus`                                 | claude-opus-4-5-20251101   |
+| `sonnet`                               | claude-sonnet-4-5-20250929 |
+| `haiku`                                | claude-3-5-haiku-20241022  |
+| `opus-4.5`, `opus-4-5`, `opus45`       | claude-opus-4-5-20251101   |
+| `sonnet-4.5`, `sonnet-4-5`, `sonnet45` | claude-sonnet-4-5-20250929 |
+| `opus-4`, `opus4`                      | claude-opus-4-20250514     |
+| `sonnet-4`, `sonnet4`                  | claude-sonnet-4-20250514   |
+| `sonnet-3.5`, `sonnet-3-5`, `sonnet35` | claude-3-5-sonnet-20241022 |
+| `haiku-3.5`, `haiku-3-5`, `haiku35`    | claude-3-5-haiku-20241022  |
+
+Simple shorthands (`opus`, `sonnet`, `haiku`) always resolve to the most recent version of each model family.
 
 ### Permission Mode Commands
 
@@ -243,7 +272,7 @@ You can create a config file at `~/.whatsapp-claude-agent/config.json`:
 {
     "whitelist": ["+1234567890", "+0987654321"],
     "mode": "default",
-    "model": "claude-sonnet-4-20250514",
+    "model": "sonnet",
     "verbose": false,
     "systemPrompt": "You are a helpful coding assistant.",
     "systemPromptAppend": "Always explain your reasoning.",
@@ -258,6 +287,7 @@ Notes:
 - Use either `systemPrompt` (replaces default) OR `systemPromptAppend` (adds to default), not both
 - `resumeSessionId` can be set to automatically resume a specific session on startup
 - `forkSession` when `true` will fork the resumed session instead of continuing it
+- `model` supports shorthands like `opus`, `sonnet`, `haiku`, or full model IDs
 
 ## Security Considerations
 

@@ -6,6 +6,7 @@ import { ConversationHistory } from './history.ts'
 import { MessageQueue } from './queue.ts'
 import type { ClaudeBackend } from '../claude/backend.ts'
 import { PermissionManager } from '../claude/permissions.ts'
+import { getModelShorthand } from '../claude/utils.ts'
 import { isCommand, parseCommand } from '../whatsapp/messages.ts'
 import type {
     Config,
@@ -160,6 +161,14 @@ export class ConversationManager extends EventEmitter {
             case 'dir':
             case 'directory':
                 await this.handleDirectoryCommand(parsed.args, sendResponse)
+                break
+
+            case 'model':
+                await this.handleModelCommand(parsed.args, sendResponse)
+                break
+
+            case 'models':
+                await this.handleModelsCommand(sendResponse)
                 break
 
             default:
@@ -339,6 +348,77 @@ export class ConversationManager extends EventEmitter {
         await sendResponse(response)
     }
 
+    private async handleModelCommand(
+        args: string,
+        sendResponse: (text: string) => Promise<void>
+    ): Promise<void> {
+        if (!args) {
+            // Show current model
+            const currentModel = this.backend.getModel()
+            await sendResponse(
+                `🤖 Current model: \`${currentModel}\`\n\nUse /models to see available models.\nShorthands: opus, sonnet, haiku, opus-4.5, sonnet-4, etc.`
+            )
+            return
+        }
+
+        const requestedInput = args.trim()
+
+        // Resolve shorthand to full model ID (returns undefined if not recognized)
+        const resolvedModel = this.backend.resolveModelShorthand(requestedInput)
+
+        // If not recognized, don't change the model
+        if (!resolvedModel) {
+            await sendResponse(
+                `❌ Unknown model: \`${requestedInput}\`\n\nUse /models to see available models.\nShorthands: opus, sonnet, haiku, opus-4.5, sonnet-4, etc.`
+            )
+            return
+        }
+
+        // Check if there's an active session - changing model may require a new session
+        const currentSessionId = this.backend.getSessionId()
+        if (currentSessionId) {
+            // Clear the session since changing model may affect context
+            this.backend.setSessionId(undefined)
+            this.history.clear()
+            this.logger.info('Session cleared due to model change')
+        }
+
+        // Change the model
+        this.backend.setModel(resolvedModel)
+        this.config.model = resolvedModel
+
+        let response =
+            requestedInput !== resolvedModel
+                ? `✓ Model changed to: \`${resolvedModel}\` (from "${requestedInput}")`
+                : `✓ Model changed to: \`${resolvedModel}\``
+        if (currentSessionId) {
+            response +=
+                '\n\n⚠️ Previous session was cleared. A new session will start with your next message.'
+        }
+        await sendResponse(response)
+    }
+
+    private async handleModelsCommand(
+        sendResponse: (text: string) => Promise<void>
+    ): Promise<void> {
+        const availableModels = this.backend.getAvailableModels()
+        const currentModel = this.backend.getModel()
+
+        const modelList = availableModels
+            .map((m) => {
+                const shorthand = getModelShorthand(m)
+                const displayName = shorthand ? `${shorthand} (${m})` : m
+                return m === currentModel
+                    ? `• \`${displayName}\` ✓ (current)`
+                    : `• \`${displayName}\``
+            })
+            .join('\n')
+
+        await sendResponse(
+            `*Available Models:*\n\n${modelList}\n\nUse \`/model <shorthand>\` to switch (e.g., \`/model opus-4-5\`).`
+        )
+    }
+
     private async handleClaudeMdCommand(
         args: string,
         sendResponse: (text: string) => Promise<void>
@@ -447,6 +527,11 @@ export class ConversationManager extends EventEmitter {
 /cd <path> - Change working directory
 /help - Show this help message
 
+*Model:*
+/model - Show current model
+/model <name> - Switch to a different model
+/models - List all available models
+
 *Permission Modes:*
 /mode - Show current permission mode
 /plan - Switch to plan mode (read-only)
@@ -467,11 +552,7 @@ export class ConversationManager extends EventEmitter {
 /claudemd user,project - Load user & project CLAUDE.md
 /claudemd clear - Disable CLAUDE.md loading
 
-*Valid CLAUDE.md sources:* user, project, local
-
-*CLI Session Options:*
-\`--resume <id>\` - Resume a previous session
-\`--fork\` - Fork the session when resuming`
+*Valid CLAUDE.md sources:* user, project, local`
     }
 
     private getStatusMessage(): string {

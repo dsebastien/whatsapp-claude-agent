@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'fs'
 import { homedir } from 'os'
 import { resolve } from 'path'
 import { ConfigSchema, type Config, type SettingSource } from '../types.ts'
+import { resolveModelShorthand } from '../claude/utils.ts'
 
 const CONFIG_FILE_NAME = 'config.json'
 
@@ -55,6 +56,19 @@ export function parseConfig(cliOptions: CLIOptions): Config {
     // Load config file first (lowest priority)
     const fileConfig = loadConfigFile(cliOptions.config)
 
+    // Resolve model shorthand (from CLI or file config)
+    const rawModel = cliOptions.model || fileConfig.model
+    let resolvedModel: string | undefined
+    if (rawModel) {
+        resolvedModel = resolveModelShorthand(rawModel)
+        if (!resolvedModel) {
+            console.warn(
+                `Warning: Unrecognized model "${rawModel}". Using default model instead.\n` +
+                    'Valid shorthands: opus, sonnet, haiku, opus-4.5, sonnet-4, etc.'
+            )
+        }
+    }
+
     // Build merged config (CLI options override file config)
     const merged = {
         directory: cliOptions.directory || fileConfig.directory,
@@ -67,7 +81,7 @@ export function parseConfig(cliOptions: CLIOptions): Config {
             : fileConfig.sessionPath
               ? expandPath(fileConfig.sessionPath)
               : undefined,
-        model: cliOptions.model || fileConfig.model,
+        model: resolvedModel,
         maxTurns: cliOptions.maxTurns ? parseInt(cliOptions.maxTurns, 10) : fileConfig.maxTurns,
         processMissed: cliOptions.processMissed ?? fileConfig.processMissed,
         missedThresholdMins: cliOptions.missedThreshold

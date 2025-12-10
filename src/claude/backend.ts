@@ -1,5 +1,9 @@
 import type { Config, PermissionMode, SettingSource } from '../types.ts'
 import type { Logger } from '../utils/logger.ts'
+import { AVAILABLE_MODELS, resolveModelShorthand as resolveModelShorthandUtil } from './utils.ts'
+
+// Re-export for backwards compatibility
+export { AVAILABLE_MODELS, resolveModelShorthandUtil as resolveModelShorthand }
 
 export interface ClaudeResponse {
     text: string
@@ -105,6 +109,37 @@ export abstract class ClaudeBackend {
      */
     getDirectory(): string {
         return this.config.directory
+    }
+
+    /**
+     * Get current model
+     */
+    getModel(): string {
+        return this.config.model
+    }
+
+    /**
+     * Set the model to use
+     */
+    setModel(model: string): void {
+        this.config.model = model
+        this.logger.info(`Model changed to: ${model}`)
+    }
+
+    /**
+     * Get list of available models
+     */
+    getAvailableModels(): string[] {
+        return AVAILABLE_MODELS
+    }
+
+    /**
+     * Resolve a model shorthand to the full model ID.
+     * Supports shorthands like "opus", "sonnet", "haiku", "opus-4.5", "sonnet-4", etc.
+     * Returns the full model ID if recognized, or undefined if not recognized.
+     */
+    resolveModelShorthand(shorthand: string): string | undefined {
+        return resolveModelShorthandUtil(shorthand)
     }
 
     /**
