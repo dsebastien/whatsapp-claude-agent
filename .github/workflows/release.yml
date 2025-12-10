@@ -15,12 +15,15 @@ permissions:
     contents: write
 
 jobs:
-    prepare:
+    build-and-release:
         runs-on: ubuntu-latest
-        outputs:
-            version: ${{ steps.version.outputs.version }}
-            tag: ${{ steps.version.outputs.tag }}
+
         steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
             - name: Determine version
               id: version
               run: |
@@ -34,30 +37,6 @@ jobs:
                   echo "tag=$TAG" >> $GITHUB_OUTPUT
                   echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-    build:
-        needs: prepare
-        strategy:
-            matrix:
-                include:
-                    - os: ubuntu-latest
-                      target: bun-linux-x64
-                      artifact: whatsapp-claude-agent-linux-x64
-                    - os: macos-latest
-                      target: bun-darwin-arm64
-                      artifact: whatsapp-claude-agent-darwin-arm64
-                    - os: macos-13
-                      target: bun-darwin-x64
-                      artifact: whatsapp-claude-agent-darwin-x64
-                    - os: windows-latest
-                      target: bun-windows-x64
-                      artifact: whatsapp-claude-agent-windows-x64.exe
-
-        runs-on: ${{ matrix.os }}
-
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
-
             - name: Setup Bun
               uses: oven-sh/setup-bun@v2
               with:
@@ -66,34 +45,57 @@ jobs:
             - name: Install dependencies
               run: bun install --frozen-lockfile
 
-            - name: Build executable
+            - name: Build all executables
               run: |
+                  mkdir -p dist
+                  BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+                  # Linux x64
                   bun build src/index.ts \
                     --compile \
                     --minify \
                     --sourcemap \
-                    --define "BUILD_VERSION='\"${{ needs.prepare.outputs.version }}\"'" \
-                    --define "BUILD_DATE='\"${{ github.event.head_commit.timestamp || github.event.repository.pushed_at }}\"'" \
+                    --define "BUILD_VERSION='\"${{ steps.version.outputs.version }}\"'" \
+                    --define "BUILD_DATE='\"${BUILD_DATE}\"'" \
                     --define "BUILD_COMMIT='\"${{ github.sha }}\"'" \
-                    --target=${{ matrix.target }} \
-                    --outfile dist/${{ matrix.artifact }}
+                    --target=bun-linux-x64 \
+                    --outfile dist/whatsapp-claude-agent-linux-x64
 
-            - name: Upload artifact
-              uses: actions/upload-artifact@v4
-              with:
-                  name: ${{ matrix.artifact }}
-                  path: dist/${{ matrix.artifact }}
-                  retention-days: 1
+                  # macOS ARM64 (Apple Silicon)
+                  bun build src/index.ts \
+                    --compile \
+                    --minify \
+                    --sourcemap \
+                    --define "BUILD_VERSION='\"${{ steps.version.outputs.version }}\"'" \
+                    --define "BUILD_DATE='\"${BUILD_DATE}\"'" \
+                    --define "BUILD_COMMIT='\"${{ github.sha }}\"'" \
+                    --target=bun-darwin-arm64 \
+                    --outfile dist/whatsapp-claude-agent-darwin-arm64
 
-    release:
-        needs: [prepare, build]
-        runs-on: ubuntu-latest
+                  # macOS x64 (Intel)
+                  bun build src/index.ts \
+                    --compile \
+                    --minify \
+                    --sourcemap \
+                    --define "BUILD_VERSION='\"${{ steps.version.outputs.version }}\"'" \
+                    --define "BUILD_DATE='\"${BUILD_DATE}\"'" \
+                    --define "BUILD_COMMIT='\"${{ github.sha }}\"'" \
+                    --target=bun-darwin-x64 \
+                    --outfile dist/whatsapp-claude-agent-darwin-x64
 
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
+                  # Windows x64
+                  bun build src/index.ts \
+                    --compile \
+                    --minify \
+                    --sourcemap \
+                    --define "BUILD_VERSION='\"${{ steps.version.outputs.version }}\"'" \
+                    --define "BUILD_DATE='\"${BUILD_DATE}\"'" \
+                    --define "BUILD_COMMIT='\"${{ github.sha }}\"'" \
+                    --target=bun-windows-x64 \
+                    --outfile dist/whatsapp-claude-agent-windows-x64.exe
+
+            - name: List artifacts
+              run: ls -lah dist/
 
             - name: Configure Git
               if: github.event_name == 'workflow_dispatch'
@@ -104,23 +106,14 @@ jobs:
             - name: Create and push tag
               if: github.event_name == 'workflow_dispatch'
               run: |
-                  git tag -a "${{ needs.prepare.outputs.tag }}" -m "Release ${{ needs.prepare.outputs.tag }}"
-                  git push origin "${{ needs.prepare.outputs.tag }}"
-
-            - name: Download all artifacts
-              uses: actions/download-artifact@v4
-              with:
-                  path: dist
-                  merge-multiple: true
-
-            - name: List artifacts
-              run: ls -lah dist/
+                  git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.tag }}"
+                  git push origin "${{ steps.version.outputs.tag }}"
 
             - name: Create Release
               uses: softprops/action-gh-release@v2
               with:
-                  tag_name: ${{ needs.prepare.outputs.tag }}
-                  name: Release ${{ needs.prepare.outputs.tag }}
+                  tag_name: ${{ steps.version.outputs.tag }}
+                  name: Release ${{ steps.version.outputs.tag }}
                   generate_release_notes: true
                   files: |
                       dist/whatsapp-claude-agent-linux-x64
