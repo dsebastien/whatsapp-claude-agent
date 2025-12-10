@@ -14,12 +14,13 @@ main()
        │
        ▼
 WhatsApp 'ready' event
+  ├─ If --join-whatsapp-group: joinGroup(inviteCode)
   └─ sendStartupAnnouncement()
-       └─ For each whitelisted number:
-            whatsapp.sendMessage(jid, announcement)
+       ├─ Group mode: send to group JID
+       └─ Private mode: send to each whitelisted number
 ```
 
-Startup announcement sent to all whitelisted numbers:
+Startup announcement (private mode):
 
 ```
 Now online!
@@ -31,6 +32,20 @@ Now online!
 Type */help* for available commands.
 ```
 
+Startup announcement (group mode):
+
+```
+Now online!
+
+📁 Working directory: `{directory}`
+🔐 Mode: {mode}
+🧠 Model: {model}
+👥 Group mode: Listening to this group only
+
+Type */help* for available commands.
+Check if online: */agent*
+```
+
 ## Incoming Message Pipeline
 
 ```
@@ -38,10 +53,16 @@ Baileys WebSocket
        │
        ▼
 WhatsAppClient.handleMessage()
-  ├─ parseMessage() → IncomingMessage
+  ├─ parseMessage() → IncomingMessage (includes participant, isGroupMessage)
   ├─ Filter: isFromMe? → skip
-  ├─ Filter: isGroup? → skip
-  ├─ Filter: inWhitelist? → skip if not
+  ├─ Group mode filtering:
+  │    ├─ If not group message → skip
+  │    ├─ If wrong group JID → skip
+  │    ├─ If message starts with [🤖 → skip (other agent)
+  │    └─ If !allowAllGroupParticipants && participant not in whitelist → skip
+  ├─ Private mode filtering:
+  │    ├─ If group message → skip
+  │    └─ If not in whitelist → skip
   ├─ Filter: withinThreshold? → skip if too old
   └─ emit('event', { type: 'message', message })
        │

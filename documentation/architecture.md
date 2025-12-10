@@ -17,7 +17,8 @@ WhatsApp-Claude-Agent bridges WhatsApp with Claude Code via the Claude Agent SDK
 
 - Wraps Baileys library for WhatsApp Web protocol
 - Handles authentication, QR code display, session persistence
-- Filters messages: whitelist, groups (ignored), time threshold
+- Filters messages: whitelist check, time threshold
+- Supports group mode (`--join-whatsapp-group`) or private message mode
 - Emits typed events to main orchestrator
 - Chunks long responses into multiple WhatsApp messages
 

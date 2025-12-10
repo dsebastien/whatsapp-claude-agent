@@ -14,12 +14,8 @@ function expandPath(path: string): string {
     return resolve(path)
 }
 
-export function getDefaultConfigPath(): string {
-    return resolve(homedir(), '.whatsapp-claude-agent', CONFIG_FILE_NAME)
-}
-
 /**
- * Get the config path in the current working directory
+ * Get the config path in the working directory
  */
 export function getLocalConfigPath(directory?: string): string {
     return resolve(directory || process.cwd(), CONFIG_FILE_NAME)
@@ -100,8 +96,13 @@ export function generateConfigTemplate(whitelist: string[]): string {
     return JSON.stringify(template, null, 4)
 }
 
-export function loadConfigFile(configPath?: string): Partial<Config> {
-    const path = configPath || getDefaultConfigPath()
+/**
+ * Load config from a file.
+ * If configPath is provided, loads from that path.
+ * Otherwise, loads from the working directory config.json.
+ */
+export function loadConfigFile(configPath?: string, directory?: string): Partial<Config> {
+    const path = configPath || getLocalConfigPath(directory)
     const expandedPath = expandPath(path)
 
     if (!existsSync(expandedPath)) {
@@ -134,11 +135,16 @@ export interface CLIOptions {
     resume?: string
     fork?: boolean
     agentName?: string
+    joinWhatsappGroup?: string
+    allowAllGroupParticipants?: boolean
 }
 
 export function parseConfig(cliOptions: CLIOptions): Config {
-    // Load config file first (lowest priority)
-    const fileConfig = loadConfigFile(cliOptions.config)
+    // Resolve directory early since we need it for config loading and agent name generation
+    const directory = expandPath(cliOptions.directory || process.cwd())
+
+    // Load config file from working directory (or explicit path)
+    const fileConfig = loadConfigFile(cliOptions.config, directory)
 
     // Resolve model shorthand (from CLI or file config)
     const rawModel = cliOptions.model || fileConfig.model
@@ -152,9 +158,6 @@ export function parseConfig(cliOptions: CLIOptions): Config {
             )
         }
     }
-
-    // Resolve directory early since we need it for agent name generation
-    const directory = expandPath(cliOptions.directory || fileConfig.directory || process.cwd())
 
     // Resolve agent name: CLI option > config file > generated default
     const agentName =
@@ -188,7 +191,10 @@ export function parseConfig(cliOptions: CLIOptions): Config {
             : fileConfig.settingSources,
         resumeSessionId: cliOptions.resume || fileConfig.resumeSessionId,
         forkSession: cliOptions.fork ?? fileConfig.forkSession,
-        agentName
+        agentName,
+        // Runtime-only: group join (never from file config)
+        joinWhatsAppGroup: cliOptions.joinWhatsappGroup,
+        allowAllGroupParticipants: cliOptions.allowAllGroupParticipants
     }
 
     // Filter out undefined values

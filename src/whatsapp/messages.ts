@@ -44,12 +44,18 @@ export function parseMessage(msg: WAMessage): IncomingMessage | null {
     const key = msg.key
     if (!key.remoteJid || !key.id) return null
 
+    // Check if this is a group message
+    const isGroupMessage = key.remoteJid.endsWith('@g.us')
+    const participant = isGroupMessage ? (key.participant ?? undefined) : undefined
+
     return {
         id: key.id,
         from: key.remoteJid,
         text: text,
         timestamp: new Date((msg.messageTimestamp as number) * 1000 || Date.now()),
-        isFromMe: key.fromMe ?? false
+        isFromMe: key.fromMe ?? false,
+        participant, // Sender in group (undefined for private)
+        isGroupMessage
     }
 }
 

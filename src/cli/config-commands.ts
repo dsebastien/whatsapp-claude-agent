@@ -1,11 +1,6 @@
-import { existsSync } from 'fs'
 import { Command } from 'commander'
-import {
-    loadConfigFile,
-    getLocalConfigPath,
-    getDefaultConfigPath,
-    generateConfigTemplate
-} from './config.ts'
+import { existsSync } from 'fs'
+import { loadConfigFile, getLocalConfigPath, generateConfigTemplate } from './config.ts'
 import { ConfigSchema, type Config } from '../types.ts'
 import { resolveModelShorthand } from '../claude/utils.ts'
 
@@ -31,15 +26,8 @@ function getConfigPath(options: { config?: string; directory?: string }): string
     if (options.config) {
         return options.config
     }
-    if (options.directory) {
-        return getLocalConfigPath(options.directory)
-    }
-    // Check local first, then default
-    const localPath = getLocalConfigPath()
-    if (existsSync(localPath)) {
-        return localPath
-    }
-    return getDefaultConfigPath()
+    // Use working directory config
+    return getLocalConfigPath(options.directory)
 }
 
 function parseValue(key: ConfigKey, value: string): unknown {

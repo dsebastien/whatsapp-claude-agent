@@ -37,7 +37,9 @@ export const ConfigSchema = z.object({
     settingSources: z.array(SettingSourceSchema).optional(),
     resumeSessionId: z.string().optional(),
     forkSession: z.boolean().default(false),
-    agentName: z.string() // Will be set with a default value during config parsing
+    agentName: z.string(), // Will be set with a default value during config parsing
+    joinWhatsAppGroup: z.string().optional(), // Runtime-only: WhatsApp group to join
+    allowAllGroupParticipants: z.boolean().default(false) // Runtime-only: bypass whitelist in group mode
 })
 
 export type Config = z.infer<typeof ConfigSchema>
@@ -48,6 +50,13 @@ export interface IncomingMessage {
     text: string
     timestamp: Date
     isFromMe: boolean
+    participant?: string // Sender JID in group messages (undefined for private chats)
+    isGroupMessage: boolean
+}
+
+export interface GroupConfig {
+    groupJid: string // The group JID we're listening to
+    inviteCode: string // Original invite code (for logging)
 }
 
 export interface OutgoingMessage {

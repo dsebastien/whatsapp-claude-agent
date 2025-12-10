@@ -8,7 +8,6 @@ import {
     loadConfigFile,
     saveConfigFile,
     getLocalConfigPath,
-    getDefaultConfigPath,
     generateConfigTemplate
 } from './config.ts'
 import type { Config } from '../types.ts'
@@ -41,14 +40,6 @@ describe('config file utilities', () => {
         test('returns config.json in cwd when no directory specified', () => {
             const path = getLocalConfigPath()
             expect(path).toEndWith('/config.json')
-        })
-    })
-
-    describe('getDefaultConfigPath', () => {
-        test('returns path in home directory', () => {
-            const path = getDefaultConfigPath()
-            expect(path).toContain('.whatsapp-claude-agent')
-            expect(path).toEndWith('config.json')
         })
     })
 
@@ -108,7 +99,8 @@ describe('config file utilities', () => {
                 missedThresholdMins: 60,
                 verbose: false,
                 forkSession: false,
-                agentName: 'Test Agent'
+                agentName: 'Test Agent',
+                allowAllGroupParticipants: false
             }
 
             const savedPath = saveConfigFile(config, configPath)
@@ -132,7 +124,8 @@ describe('config file utilities', () => {
                 missedThresholdMins: 60,
                 verbose: false,
                 forkSession: false,
-                agentName: 'Test Agent'
+                agentName: 'Test Agent',
+                allowAllGroupParticipants: false
             }
 
             const savedPath = saveConfigFile(config)
@@ -153,7 +146,8 @@ describe('config file utilities', () => {
                 missedThresholdMins: 60,
                 verbose: false,
                 forkSession: false,
-                agentName: 'Test Agent'
+                agentName: 'Test Agent',
+                allowAllGroupParticipants: false
             }
 
             saveConfigFile(config, nestedPath)
@@ -174,7 +168,8 @@ describe('config file utilities', () => {
                 verbose: false,
                 forkSession: true, // runtime-only
                 resumeSessionId: 'some-session-id', // runtime-only
-                agentName: 'Test Agent'
+                agentName: 'Test Agent',
+                allowAllGroupParticipants: true // runtime-only
             }
 
             saveConfigFile(config, configPath)
@@ -182,6 +177,7 @@ describe('config file utilities', () => {
             const content = JSON.parse(readFileSync(configPath, 'utf-8'))
             expect(content.forkSession).toBeUndefined()
             expect(content.resumeSessionId).toBeUndefined()
+            expect(content.allowAllGroupParticipants).toBeUndefined()
         })
 
         test('formats JSON with indentation', () => {
@@ -196,7 +192,8 @@ describe('config file utilities', () => {
                 missedThresholdMins: 60,
                 verbose: false,
                 forkSession: false,
-                agentName: 'Test Agent'
+                agentName: 'Test Agent',
+                allowAllGroupParticipants: false
             }
 
             saveConfigFile(config, configPath)

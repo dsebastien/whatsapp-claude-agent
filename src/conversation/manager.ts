@@ -22,6 +22,7 @@ import type {
     AgentEvent
 } from '../types.ts'
 import type { Logger } from '../utils/logger.ts'
+import type { WhatsAppClient } from '../whatsapp/client.ts'
 
 export class ConversationManager extends EventEmitter {
     private history: ConversationHistory
@@ -30,6 +31,7 @@ export class ConversationManager extends EventEmitter {
     private backend: ClaudeBackend
     private config: Config
     private logger: Logger
+    private whatsappClient: WhatsAppClient | null = null
 
     constructor(backend: ClaudeBackend, config: Config, logger: Logger) {
         super()
@@ -48,6 +50,13 @@ export class ConversationManager extends EventEmitter {
         this.permissions.on('permission-request', (request) => {
             this.emit('event', { type: 'permission-request', request } as AgentEvent)
         })
+    }
+
+    /**
+     * Set WhatsApp client reference (for accessing group config)
+     */
+    setWhatsAppClient(client: WhatsAppClient): void {
+        this.whatsappClient = client
     }
 
     /**
@@ -185,6 +194,10 @@ export class ConversationManager extends EventEmitter {
 
             case 'config':
                 await this.handleConfigCommand(parsed.args, sendResponse)
+                break
+
+            case 'agent':
+                await sendResponse(this.getAgentInfoMessage())
                 break
 
             default:
@@ -707,6 +720,7 @@ Use \`/config save\` to save to file.`
         return `*Available Commands:*
 
 *Session & Directory:*
+/agent - Check if agent is online
 /clear - Clear conversation history
 /status - Show agent status
 /session - Show current session ID
@@ -754,10 +768,26 @@ Use \`/config save\` to save to file.`
 *Valid CLAUDE.md sources:* user, project, local`
     }
 
+    private getAgentInfoMessage(): string {
+        const groupConfig = this.whatsappClient?.getGroupConfig()
+        const chatMode = groupConfig ? 'Group' : 'Private'
+
+        return `*Agent Online*
+
+🤖 Name: *${this.config.agentName}*
+📁 Directory: \`${this.config.directory}\`
+🔐 Mode: ${this.config.mode}
+🧠 Model: ${this.config.model}
+💬 Chat: ${chatMode}
+
+Type */help* for available commands.`
+    }
+
     private getStatusMessage(): string {
         const promptConfig = this.backend.getSystemPromptConfig()
         const sources = this.backend.getSettingSources()
         const sessionId = this.backend.getSessionId()
+        const groupConfig = this.whatsappClient?.getGroupConfig()
 
         let promptStatus = 'default'
         if (promptConfig.systemPrompt) {
@@ -768,6 +798,9 @@ Use \`/config save\` to save to file.`
 
         const claudeMdStatus = sources?.length ? sources.join(', ') : 'disabled'
         const sessionStatus = sessionId ? `\`${sessionId}\`` : 'none (new session)'
+        const chatModeStatus = groupConfig
+            ? `Group: \`${groupConfig.groupJid}\``
+            : 'Private messages'
 
         return `*Agent Status:*
 
@@ -779,7 +812,8 @@ Use \`/config save\` to save to file.`
 💬 Conversation length: ${this.history.length} messages
 ⏳ Pending permissions: ${this.permissions.pendingCount}
 📝 System prompt: ${promptStatus}
-📄 CLAUDE.md sources: ${claudeMdStatus}`
+📄 CLAUDE.md sources: ${claudeMdStatus}
+👥 Chat mode: ${chatModeStatus}`
     }
 
     /**

@@ -41,13 +41,12 @@ Valid keys for set/get: whitelist, directory, mode, sessionPath, model, maxTurns
 ## Sources (Priority Order)
 
 1. **CLI arguments** (highest) — override everything
-2. **Config file** — used if CLI not provided
+2. **Config file** — `{directory}/config.json` (working directory)
 3. **Built-in defaults** (lowest)
 
-## Config File Locations
+## Config File Location
 
-- **Working directory**: `{directory}/config.json` — used by `/config` commands
-- **Home directory**: `~/.whatsapp-claude-agent/config.json` — loaded at startup
+Config is loaded from the working directory: `{directory}/config.json`
 
 Specify custom path: `-c, --config <path>`
 
@@ -71,44 +70,45 @@ ConfigSchema = z.object({
     settingSources: z.array(SettingSourceSchema).optional(),
     resumeSessionId: z.string().optional(),
     forkSession: z.boolean().default(false),
-    agentName: z.string()
+    agentName: z.string(),
+    joinWhatsAppGroup: z.string().optional(),
+    allowAllGroupParticipants: z.boolean().default(false)
 })
 ```
 
 ## CLI to Config Mapping
 
-| CLI                      | Config Property       |
-| ------------------------ | --------------------- |
-| `-d, --directory`        | `directory`           |
-| `-m, --mode`             | `mode`                |
-| `-w, --whitelist`        | `whitelist`           |
-| `-s, --session`          | `sessionPath`         |
-| `--model`                | `model`               |
-| `--max-turns`            | `maxTurns`            |
-| `--process-missed`       | `processMissed`       |
-| `--missed-threshold`     | `missedThresholdMins` |
-| `-v, --verbose`          | `verbose`             |
-| `--system-prompt`        | `systemPrompt`        |
-| `--system-prompt-append` | `systemPromptAppend`  |
-| `--load-claude-md`       | `settingSources`      |
-| `--resume`               | `resumeSessionId`     |
-| `--fork`                 | `forkSession`         |
-| `--agent-name`           | `agentName`           |
+| CLI                              | Config Property             |
+| -------------------------------- | --------------------------- |
+| `-d, --directory`                | `directory`                 |
+| `-m, --mode`                     | `mode`                      |
+| `-w, --whitelist`                | `whitelist`                 |
+| `-s, --session`                  | `sessionPath`               |
+| `--model`                        | `model`                     |
+| `--max-turns`                    | `maxTurns`                  |
+| `--process-missed`               | `processMissed`             |
+| `--missed-threshold`             | `missedThresholdMins`       |
+| `-v, --verbose`                  | `verbose`                   |
+| `--system-prompt`                | `systemPrompt`              |
+| `--system-prompt-append`         | `systemPromptAppend`        |
+| `--load-claude-md`               | `settingSources`            |
+| `--resume`                       | `resumeSessionId`           |
+| `--fork`                         | `forkSession`               |
+| `--agent-name`                   | `agentName`                 |
+| `--join-whatsapp-group`          | `joinWhatsAppGroup`         |
+| `--allow-all-group-participants` | `allowAllGroupParticipants` |
 
 ## Save/Load Functions
 
 ```typescript
 // src/cli/config.ts
 
-loadConfigFile(configPath?: string): Partial<Config>
-// Loads from path or default (~/.whatsapp-claude-agent/config.json)
+loadConfigFile(configPath?: string, directory?: string): Partial<Config>
+// Loads from configPath or {directory}/config.json
 
 saveConfigFile(config: Config, configPath?: string): string
 // Saves to path or {config.directory}/config.json
 // Returns saved path
-
-getDefaultConfigPath(): string
-// ~/.whatsapp-claude-agent/config.json
 
 getLocalConfigPath(directory?: string): string
 // {directory}/config.json
@@ -127,7 +127,7 @@ Only persistent properties saved to file (defined in `SAVEABLE_KEYS` in `src/cli
 
 Runtime-only (not saved):
 
-- resumeSessionId, forkSession
+- resumeSessionId, forkSession, joinWhatsAppGroup, allowAllGroupParticipants
 
 ## Adding New Config Options
 

@@ -17,8 +17,9 @@ parseCommand(text: string): { command: string; args: string } | null
 
 | Command                          | Handler                    | Effect                                         |
 | -------------------------------- | -------------------------- | ---------------------------------------------- |
+| `/agent`                         | `getAgentInfoMessage()`    | Check if agent is online, show basic info      |
 | `/clear`                         | inline                     | Clears conversation history                    |
-| `/status`                        | `getStatusMessage()`       | Shows agent status                             |
+| `/status`                        | `getStatusMessage()`       | Shows detailed agent status                    |
 | `/session [id]`                  | `handleSessionCommand()`   | Show/set session ID                            |
 | `/session clear`, `/session new` | `handleSessionCommand()`   | Start new session                              |
 | `/fork`                          | `handleForkCommand()`      | Fork current session                           |
@@ -96,6 +97,16 @@ Setting prompt clears session (context changes).
 | `/config save`                         | —                       | Save to `{directory}/config.json` |
 | `/config generate`, `/config template` | —                       | Generate template                 |
 | `/config reload`                       | —                       | View file contents                |
+
+## Group Mode
+
+When running with `--join-whatsapp-group`, the agent enters group mode:
+
+- Agent listens ONLY to the specified group (ignores private messages)
+- Messages from whitelisted participants are processed directly
+- Use `--allow-all-group-participants` to allow all group members (bypasses whitelist)
+
+All standard commands work the same in group mode.
 
 ## Adding New Commands
 

@@ -30,6 +30,7 @@ Examples:
   $ whatsapp-claude-agent -c ~/.config/whatsapp-claude-agent/config.json
   $ whatsapp-claude-agent -w "+1234567890" --resume <session-id>
   $ whatsapp-claude-agent -w "+1234567890" --resume <session-id> --fork
+  $ whatsapp-claude-agent -w "+1234567890" --join-whatsapp-group "https://chat.whatsapp.com/XXX"
 
 Config Management (without running agent):
   $ whatsapp-claude-agent config init "+1234567890"
@@ -86,6 +87,15 @@ Config Management (without running agent):
             '--agent-name <name>',
             'Agent identity name used to prefix messages (default: auto-generated from hostname + directory + superhero)'
         )
+        .option(
+            '--join-whatsapp-group <url-or-code>',
+            'Join and listen to a WhatsApp group (URL: https://chat.whatsapp.com/XXX or code: XXX). When specified, agent listens ONLY to this group, not private messages.'
+        )
+        .option(
+            '--allow-all-group-participants',
+            'In group mode, allow messages from all participants (bypasses whitelist). Messages from other agents are still ignored.',
+            false
+        )
         // Allow running without subcommand (main agent mode)
         .action(() => {
             // No-op: parsing continues, main() in index.ts handles the rest
@@ -116,8 +126,9 @@ export function parseArgs(args: string[]): Config {
     program.parse(args)
     const options = program.opts<CLIOptions>()
 
-    // Check for whitelist - it can come from CLI or config file
-    const fileConfig = loadConfigFile(options.config)
+    // Check for whitelist - it can come from CLI or config file in working directory
+    const directory = options.directory || process.cwd()
+    const fileConfig = loadConfigFile(options.config, directory)
     const hasWhitelist = options.whitelist || fileConfig.whitelist
 
     if (!hasWhitelist) {

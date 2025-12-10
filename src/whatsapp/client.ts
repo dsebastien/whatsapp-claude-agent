@@ -12,10 +12,10 @@ import qrcode from 'qrcode-terminal'
 import { initAuthState, type AuthState } from './auth.ts'
 import { chunkMessage } from './chunker.ts'
 import { parseMessage, isWithinThreshold } from './messages.ts'
-import { isWhitelisted, isGroupJid } from '../utils/phone.ts'
+import { isWhitelisted, extractGroupInviteCode } from '../utils/phone.ts'
 import { formatMessageWithAgentName } from '../utils/agent-name.ts'
 import type { Logger } from '../utils/logger.ts'
-import type { Config, AgentEvent } from '../types.ts'
+import type { Config, AgentEvent, GroupConfig } from '../types.ts'
 
 // Create a silent logger for Baileys to suppress its verbose output
 const silentLogger = pino({ level: 'silent' })
@@ -32,6 +32,7 @@ export class WhatsAppClient extends EventEmitter {
     private isReady = false
     private startTime: Date
     private sentMessageIds: Set<string> = new Set() // Track messages we send to avoid loops
+    private groupConfig: GroupConfig | null = null // Group mode configuration
 
     constructor(config: Config, logger: Logger) {
         super()
@@ -111,6 +112,18 @@ export class WhatsAppClient extends EventEmitter {
                 this.logger.info('WhatsApp connection established!')
                 this.isReady = true
                 this.emit('event', { type: 'authenticated' } as AgentEvent)
+
+                // Join group if requested (only on first connection, not reconnects)
+                if (this.config.joinWhatsAppGroup && !this.groupConfig) {
+                    try {
+                        await this.joinGroup(this.config.joinWhatsAppGroup)
+                    } catch (error) {
+                        const errorMsg = error instanceof Error ? error.message : String(error)
+                        this.logger.error(`Failed to join group: ${errorMsg}`)
+                        // Continue without group mode - will work in private mode
+                    }
+                }
+
                 this.emit('event', { type: 'ready' } as AgentEvent)
             }
         })
@@ -138,7 +151,7 @@ export class WhatsAppClient extends EventEmitter {
         }
 
         this.logger.debug(
-            `Parsed message: from=${msg.from}, isFromMe=${msg.isFromMe}, text="${msg.text.slice(0, 30)}..."`
+            `Parsed message: from=${msg.from}, participant=${msg.participant}, isGroupMessage=${msg.isGroupMessage}, text="${msg.text.slice(0, 30)}..."`
         )
 
         // Ignore messages that WE sent (bot responses) to prevent loops
@@ -149,16 +162,66 @@ export class WhatsAppClient extends EventEmitter {
             return
         }
 
-        // Ignore group messages
-        if (isGroupJid(msg.from)) {
-            this.logger.debug(`Ignoring group message from ${msg.from}`)
-            return
-        }
+        // Determine filtering logic based on group mode
+        if (this.groupConfig) {
+            // GROUP MODE: Only process messages from the joined group
+            if (!msg.isGroupMessage) {
+                this.logger.debug('Group mode active: Ignoring private message')
+                return
+            }
 
-        // Check whitelist
-        if (!isWhitelisted(msg.from, this.config.whitelist)) {
-            this.logger.warn(`Blocked message from non-whitelisted number: ${msg.from}`)
-            return
+            if (msg.from !== this.groupConfig.groupJid) {
+                this.logger.debug(
+                    `Group mode active: Ignoring message from different group ${msg.from}`
+                )
+                return
+            }
+
+            // Check whitelist against PARTICIPANT (sender), not group JID
+            if (!msg.participant) {
+                this.logger.debug('Group message missing participant info')
+                return
+            }
+
+            // Ignore messages from other agents (prefixed with [🤖)
+            if (msg.text.startsWith('[🤖')) {
+                this.logger.debug('Ignoring message from another agent')
+                return
+            }
+
+            // Check whitelist unless allowAllGroupParticipants is enabled
+            if (!this.config.allowAllGroupParticipants) {
+                if (!isWhitelisted(msg.participant, this.config.whitelist)) {
+                    this.logger.warn(
+                        `Blocked group message from non-whitelisted participant: ${msg.participant}`
+                    )
+                    // Provide hint for @lid identifiers (WhatsApp privacy IDs used in groups)
+                    if (msg.participant.endsWith('@lid')) {
+                        const lidId = msg.participant.replace('@lid', '')
+                        this.logger.info(
+                            `Hint: This is a WhatsApp privacy ID (lid). If this is you, add "${lidId}" or "${msg.participant}" to your whitelist. ` +
+                                `Note: lid IDs may change between sessions. Consider using --allow-all-group-participants instead.`
+                        )
+                    }
+                    return
+                }
+                this.logger.debug(`Group message from whitelisted participant: ${msg.participant}`)
+            } else {
+                this.logger.debug(
+                    `Group message from participant: ${msg.participant} (allowAllGroupParticipants enabled)`
+                )
+            }
+        } else {
+            // PRIVATE MODE: Original behavior - ignore groups, check whitelist
+            if (msg.isGroupMessage) {
+                this.logger.debug(`Ignoring group message from ${msg.from} (private mode active)`)
+                return
+            }
+
+            if (!isWhitelisted(msg.from, this.config.whitelist)) {
+                this.logger.warn(`Blocked message from non-whitelisted number: ${msg.from}`)
+                return
+            }
         }
 
         // Check if message is within threshold (for missed messages)
@@ -176,8 +239,9 @@ export class WhatsAppClient extends EventEmitter {
             this.logger.info(`Processing missed message from ${msg.from}`)
         }
 
+        const displayFrom = msg.participant || msg.from
         this.logger.info(
-            `Message from ${msg.from}: "${msg.text.slice(0, 50)}${msg.text.length > 50 ? '...' : ''}"`
+            `Message from ${displayFrom}: "${msg.text.slice(0, 50)}${msg.text.length > 50 ? '...' : ''}"`
         )
         this.emit('event', { type: 'message', message: msg } as AgentEvent)
     }
@@ -233,5 +297,78 @@ export class WhatsAppClient extends EventEmitter {
 
     get ready(): boolean {
         return this.isReady
+    }
+
+    /**
+     * Join a WhatsApp group using invite code or URL
+     * If already a member, retrieves group info instead of joining again
+     */
+    private async joinGroup(urlOrCode: string): Promise<void> {
+        if (!this.socket || !this.isReady) {
+            throw new Error('WhatsApp client not ready')
+        }
+
+        const inviteCode = extractGroupInviteCode(urlOrCode)
+        this.logger.info(`Joining group with invite code: ${inviteCode}`)
+
+        let groupJid: string | undefined
+
+        try {
+            // First, try to get invite info to check if we're already a member
+            const inviteInfo = await this.socket.groupGetInviteInfo(inviteCode)
+
+            if (inviteInfo) {
+                // We got invite info - check if we're already in this group
+                const potentialJid = inviteInfo.id
+                this.logger.debug(`Group JID from invite: ${potentialJid}`)
+
+                try {
+                    // Try to get group metadata - if it succeeds, we're already a member
+                    await this.socket.groupMetadata(potentialJid)
+                    this.logger.info(`Already a member of group: ${potentialJid}`)
+                    groupJid = potentialJid
+                } catch {
+                    // Not a member yet, proceed with joining
+                    this.logger.debug(`Not yet a member, joining group...`)
+                    groupJid = await this.socket.groupAcceptInvite(inviteCode)
+                }
+            }
+        } catch (error) {
+            // groupGetInviteInfo failed, try direct join
+            this.logger.debug(`Could not get invite info, attempting direct join`)
+            try {
+                groupJid = await this.socket.groupAcceptInvite(inviteCode)
+            } catch (joinError) {
+                const errorMsg = joinError instanceof Error ? joinError.message : String(joinError)
+                // Check if error indicates we're already a member
+                if (errorMsg.includes('already') || errorMsg.includes('conflict')) {
+                    this.logger.warn(
+                        `Join failed (possibly already a member). Use the group JID directly if known.`
+                    )
+                }
+                throw joinError
+            }
+        }
+
+        if (!groupJid) {
+            throw new Error('Failed to join group: no group JID returned')
+        }
+
+        this.groupConfig = {
+            groupJid,
+            inviteCode
+        }
+
+        this.logger.info(`Successfully connected to group: ${groupJid}`)
+        this.logger.info(
+            `Agent is now listening ONLY to this group. Private messages will be ignored.`
+        )
+    }
+
+    /**
+     * Get current group config (if in group mode)
+     */
+    getGroupConfig(): GroupConfig | null {
+        return this.groupConfig
     }
 }

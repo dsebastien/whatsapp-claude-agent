@@ -40,6 +40,10 @@ async function main() {
                 'and a new session will be started instead.'
         )
     }
+    if (config.joinWhatsAppGroup) {
+        logger.info(`Group mode enabled: will join group ${config.joinWhatsAppGroup}`)
+        logger.info('Agent will listen ONLY to this group and ignore private messages.')
+    }
 
     // Create Claude backend
     const backend = new SDKBackend(config, logger)
@@ -67,6 +71,9 @@ async function main() {
 
     // Create conversation manager
     const conversation = new ConversationManager(backend, config, logger)
+
+    // Inject WhatsApp client reference into conversation manager (for group config access)
+    conversation.setWhatsAppClient(whatsapp)
 
     // Track the current message sender for permission requests
     let currentSenderJid: string | null = null
@@ -110,7 +117,29 @@ async function main() {
     })
 
     async function sendStartupAnnouncement() {
-        const announcement = `Now online!
+        const groupConfig = whatsapp.getGroupConfig()
+
+        if (groupConfig) {
+            // Group mode: Send announcement to the group
+            const announcement = `Now online!
+
+📁 Working directory: \`${config.directory}\`
+🔐 Mode: ${config.mode}
+🧠 Model: ${config.model}
+👥 Group mode: Listening to this group only
+
+Type */help* for available commands.
+Check if online: */agent*`
+
+            try {
+                await whatsapp.sendMessage(groupConfig.groupJid, announcement)
+                logger.info(`Startup announcement sent to group ${groupConfig.groupJid}`)
+            } catch (error) {
+                logger.error(`Failed to send startup announcement to group: ${error}`)
+            }
+        } else {
+            // Private mode: Send announcement to all whitelisted numbers
+            const announcement = `Now online!
 
 📁 Working directory: \`${config.directory}\`
 🔐 Mode: ${config.mode}
@@ -118,13 +147,14 @@ async function main() {
 
 Type */help* for available commands.`
 
-        for (const phone of config.whitelist) {
-            const jid = phoneToJid(phone)
-            try {
-                await whatsapp.sendMessage(jid, announcement)
-                logger.info(`Startup announcement sent to ${phone}`)
-            } catch (error) {
-                logger.error(`Failed to send startup announcement to ${phone}: ${error}`)
+            for (const phone of config.whitelist) {
+                const jid = phoneToJid(phone)
+                try {
+                    await whatsapp.sendMessage(jid, announcement)
+                    logger.info(`Startup announcement sent to ${phone}`)
+                } catch (error) {
+                    logger.error(`Failed to send startup announcement to ${phone}: ${error}`)
+                }
             }
         }
     }
