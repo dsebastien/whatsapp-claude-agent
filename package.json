@@ -2,9 +2,18 @@
     "name": "whatsapp-claude-agent",
     "version": "0.1.0",
     "description": "Bridge WhatsApp with Claude Code - interact with your files via WhatsApp messages",
+    "author": "Sébastien Dubois",
     "module": "src/index.ts",
     "type": "module",
     "private": true,
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/dsebastien/whatsapp-claude-agent.git"
+    },
+    "bugs": {
+        "url": "https://github.com/dsebastien/whatsapp-claude-agent/issues"
+    },
+    "homepage": "https://github.com/dsebastien/whatsapp-claude-agent",
     "engines": {
         "node": ">=20.0.0",
         "npm": ">=10.1.0"
@@ -35,11 +44,14 @@
         "release": "git tag -a"
     },
     "lint-staged": {
-        "*": "prettier --write --ignore-unknown"
+        "**/*": "prettier --write --ignore-unknown"
     },
     "config": {
         "commitizen": {
-            "path": "cz-customizable"
+            "path": "node_modules/cz-customizable"
+        },
+        "cz-customizable": {
+            "config": ".cz-config.cjs"
         }
     },
     "devDependencies": {
