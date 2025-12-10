@@ -10,9 +10,10 @@ Manage config without running agent via `config` subcommand:
 
 ```bash
 # Initialize new config
-whatsapp-claude-agent config init "+1234567890"
+whatsapp-claude-agent config init                     # basic config (no whitelist)
+whatsapp-claude-agent config init "+1234567890"       # with whitelist
 whatsapp-claude-agent config init "+111,+222"         # multiple numbers
-whatsapp-claude-agent config init "+111" --force      # overwrite existing
+whatsapp-claude-agent config init --force             # overwrite existing
 
 # View config
 whatsapp-claude-agent config show              # human-readable (alias: list)
@@ -121,7 +122,7 @@ saveConfigFile(config: Config, configPath?: string): string
 getLocalConfigPath(directory?: string): string
 // {directory}/.whatsapp-claude-agent.json
 
-generateConfigTemplate(whitelist: string[]): string
+generateConfigTemplate(whitelist?: string[]): string
 // Returns JSON string for template
 ```
 

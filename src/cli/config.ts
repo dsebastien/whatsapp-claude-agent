@@ -84,13 +84,15 @@ export function saveConfigFile(config: Config, configPath?: string): string {
 /**
  * Generate a template config file content
  */
-export function generateConfigTemplate(whitelist: string[]): string {
-    const template = {
-        whitelist,
+export function generateConfigTemplate(whitelist?: string[]): string {
+    const template: Record<string, unknown> = {
         directory: process.cwd(),
         mode: 'default',
         model: 'sonnet',
         verbose: false
+    }
+    if (whitelist && whitelist.length > 0) {
+        template['whitelist'] = whitelist
     }
     return JSON.stringify(template, null, 4)
 }

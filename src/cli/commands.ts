@@ -33,7 +33,7 @@ Examples:
   $ whatsapp-claude-agent -w "+1234567890" --join-whatsapp-group "https://chat.whatsapp.com/XXX"
 
 Config Management (without running agent):
-  $ whatsapp-claude-agent config init "+1234567890"
+  $ whatsapp-claude-agent config init
   $ whatsapp-claude-agent config show
   $ whatsapp-claude-agent config set model opus
   $ whatsapp-claude-agent config get whitelist`

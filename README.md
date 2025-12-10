@@ -435,7 +435,8 @@ Manage configuration without running the agent:
 
 ```bash
 # Initialize new config file
-whatsapp-claude-agent config init "+1234567890"
+whatsapp-claude-agent config init
+whatsapp-claude-agent config init "+1234567890"  # with whitelist
 
 # View current config
 whatsapp-claude-agent config show

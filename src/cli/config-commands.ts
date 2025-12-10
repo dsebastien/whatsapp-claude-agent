@@ -210,12 +210,12 @@ export function createConfigCommand(): Command {
 
     // config init
     config
-        .command('init <whitelist>')
+        .command('init [whitelist]')
         .description(
-            'Create a new configuration file with whitelist (comma-separated phone numbers)'
+            'Create a new configuration file (optionally with comma-separated phone numbers)'
         )
         .option('--force', 'Overwrite existing config file')
-        .action((whitelistArg: string, options, cmd) => {
+        .action((whitelistArg: string | undefined, options, cmd) => {
             const parentOpts = cmd.parent.opts()
             const configDir = parentOpts.directory || process.cwd()
             const configPath = parentOpts.config || getLocalConfigPath(configDir)
@@ -226,7 +226,9 @@ export function createConfigCommand(): Command {
                 process.exit(1)
             }
 
-            const whitelist = whitelistArg.split(',').map((s: string) => s.trim())
+            const whitelist = whitelistArg
+                ? whitelistArg.split(',').map((s: string) => s.trim())
+                : undefined
             const template = generateConfigTemplate(whitelist)
 
             const { writeFileSync, mkdirSync } = require('fs')
