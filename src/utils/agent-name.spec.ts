@@ -1,4 +1,5 @@
 import { describe, test, expect } from 'bun:test'
+import { hostname } from 'os'
 import superheroes from 'superheroes'
 import {
     getRandomSuperheroName,
@@ -79,27 +80,33 @@ describe('toTitleCase', () => {
 })
 
 describe('generateDefaultAgentName', () => {
-    test('generates name from directory basename in Title Case', () => {
+    const titleCaseHostname = toTitleCase(hostname())
+
+    test('starts with hostname in Title Case', () => {
         const name = generateDefaultAgentName('/home/user/my-project')
-        expect(name).toMatch(/^My Project /)
+        expect(name).toMatch(new RegExp(`^${titleCaseHostname} `))
+    })
+
+    test('includes directory basename in Title Case after hostname', () => {
+        const name = generateDefaultAgentName('/home/user/my-project')
+        expect(name).toMatch(new RegExp(`^${titleCaseHostname} My Project `))
     })
 
     test('handles nested directory paths', () => {
         const name = generateDefaultAgentName('/very/deep/nested/path/to/project-name')
-        expect(name).toMatch(/^Project Name /)
+        expect(name).toMatch(new RegExp(`^${titleCaseHostname} Project Name `))
     })
 
     test('converts directory name to Title Case', () => {
         const name = generateDefaultAgentName('/home/user/knowii-voice-ai')
-        expect(name).toMatch(/^Knowii Voice Ai /)
+        expect(name).toMatch(new RegExp(`^${titleCaseHostname} Knowii Voice Ai `))
     })
 
     test('appends a superhero name in Title Case', () => {
         const name = generateDefaultAgentName('/home/user/test')
-        // Should have format: "Test {Superhero Name}"
+        // Should have format: "{Hostname} Test {Superhero Name}"
         const parts = name.split(' ')
-        expect(parts.length).toBeGreaterThanOrEqual(2)
-        expect(parts[0]).toBe('Test')
+        expect(parts.length).toBeGreaterThanOrEqual(3)
         // All words should be title cased (first letter uppercase)
         for (const part of parts) {
             expect(part.charAt(0)).toBe(part.charAt(0).toUpperCase())

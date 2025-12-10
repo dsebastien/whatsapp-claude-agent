@@ -5,7 +5,7 @@ Bridge WhatsApp with Claude Code - interact with your files via WhatsApp message
 ## Features
 
 - **Claude Agent SDK integration**: Direct integration with Claude Agent SDK
-- **Agent identity**: Customizable agent name with auto-generation (e.g., "My Project Spider Man")
+- **Agent identity**: Customizable agent name with auto-generation (e.g., "Mypc My Project Spider Man")
 - **Permission modes**: Full SDK permission modes (default, acceptEdits, bypassPermissions, plan, dontAsk)
 - **WhatsApp commands**: Switch modes, clear history, check status, change agent name
 - **Message chunking**: Long responses are split into multiple messages
@@ -60,7 +60,7 @@ Options:
   -m, --mode <mode>              Permission mode (see below)
   -w, --whitelist <numbers>      Comma-separated phone numbers (required)
   -s, --session <path>           WhatsApp session directory
-  --agent-name <name>            Agent name (default: "{Directory} {Superhero}", e.g., "My Project Spider Man")
+  --agent-name <name>            Agent name (default: "{Hostname} {Directory} {Superhero}")
   --model <model>                Claude model to use (supports shorthands)
   --max-turns <n>                Maximum conversation turns
   --process-missed               Process messages received while offline

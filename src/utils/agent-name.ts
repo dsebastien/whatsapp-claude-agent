@@ -1,4 +1,5 @@
 import { basename } from 'path'
+import { hostname } from 'os'
 import { randomSuperhero } from 'superheroes'
 
 /**
@@ -24,17 +25,19 @@ export function toTitleCase(str: string): string {
 }
 
 /**
- * Generate a default agent name based on the directory name and a random superhero
- * Format: "Directory Name Superhero" (Title Case)
- * Example: "My Project Spider Man", "Knowii Voice AI Jarvis"
+ * Generate a default agent name based on the hostname, directory name, and a random superhero
+ * Format: "Hostname Directory Name Superhero" (Title Case)
+ * Example: "Mypc My Project Spider Man", "Server01 Knowii Voice AI Jarvis"
  */
 export function generateDefaultAgentName(directory: string): string {
+    const host = hostname()
     const dirName = basename(directory)
     const superhero = getRandomSuperheroName()
-    // Convert both parts to title case and combine
+    // Convert all parts to title case and combine
+    const titleCaseHost = toTitleCase(host)
     const titleCaseDirName = toTitleCase(dirName)
     const titleCaseSuperhero = toTitleCase(superhero)
-    return `${titleCaseDirName} ${titleCaseSuperhero}`
+    return `${titleCaseHost} ${titleCaseDirName} ${titleCaseSuperhero}`
 }
 
 /**
