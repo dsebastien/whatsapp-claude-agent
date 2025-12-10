@@ -44,6 +44,8 @@ export interface CLIOptions {
     missedThreshold?: string
     verbose?: boolean
     config?: string
+    systemPrompt?: string
+    systemPromptAppend?: string
 }
 
 export function parseConfig(cliOptions: CLIOptions): Config {
@@ -68,7 +70,9 @@ export function parseConfig(cliOptions: CLIOptions): Config {
         missedThresholdMins: cliOptions.missedThreshold
             ? parseInt(cliOptions.missedThreshold, 10)
             : fileConfig.missedThresholdMins,
-        verbose: cliOptions.verbose ?? fileConfig.verbose
+        verbose: cliOptions.verbose ?? fileConfig.verbose,
+        systemPrompt: cliOptions.systemPrompt || fileConfig.systemPrompt,
+        systemPromptAppend: cliOptions.systemPromptAppend || fileConfig.systemPromptAppend
     }
 
     // Filter out undefined values

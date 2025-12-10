@@ -51,6 +51,11 @@ Examples:
         .option('--missed-threshold <mins>', 'Only process messages from last N minutes', '60')
         .option('-v, --verbose', 'Enable verbose logging', false)
         .option('-c, --config <path>', 'Path to config file')
+        .option('--system-prompt <prompt>', 'Custom system prompt for Claude (replaces default)')
+        .option(
+            '--system-prompt-append <text>',
+            'Text to append to the default Claude Code system prompt'
+        )
 
     return program
 }

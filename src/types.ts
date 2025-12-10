@@ -22,7 +22,9 @@ export const ConfigSchema = z.object({
     maxTurns: z.number().optional(),
     processMissed: z.boolean().default(true),
     missedThresholdMins: z.number().default(60),
-    verbose: z.boolean().default(false)
+    verbose: z.boolean().default(false),
+    systemPrompt: z.string().optional(),
+    systemPromptAppend: z.string().optional()
 })
 
 export type Config = z.infer<typeof ConfigSchema>

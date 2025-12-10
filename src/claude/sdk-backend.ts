@@ -56,6 +56,29 @@ export class SDKBackend extends ClaudeBackend {
         }
     }
 
+    /**
+     * Build the system prompt based on config options.
+     * - If systemPrompt is set, use it as a custom prompt (replaces default)
+     * - If systemPromptAppend is set, use default preset with appended text
+     * - Otherwise, use default preset
+     */
+    private buildSystemPrompt():
+        | string
+        | { type: 'preset'; preset: 'claude_code'; append?: string }
+        | undefined {
+        if (this.config.systemPrompt) {
+            return this.config.systemPrompt
+        }
+        if (this.config.systemPromptAppend) {
+            return {
+                type: 'preset',
+                preset: 'claude_code',
+                append: this.config.systemPromptAppend
+            }
+        }
+        return { type: 'preset', preset: 'claude_code' }
+    }
+
     async query(prompt: string, conversationHistory?: string[]): Promise<ClaudeResponse> {
         this.logger.info(`Querying Claude SDK (mode: ${this.mode}, model: ${this.config.model})`)
 
@@ -87,6 +110,7 @@ export class SDKBackend extends ClaudeBackend {
                     maxTurns: this.config.maxTurns,
                     permissionMode: this.mode,
                     tools: { type: 'preset', preset: 'claude_code' },
+                    systemPrompt: this.buildSystemPrompt(),
                     canUseTool: async (toolName: string, input: unknown) => {
                         this.logger.info(`>>> canUseTool callback invoked: ${toolName}`)
                         return this.handleToolPermission(toolName, input)
