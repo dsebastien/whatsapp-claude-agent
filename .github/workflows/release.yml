@@ -112,6 +112,12 @@ jobs:
               run: |
                   npm install -g conventional-changelog-cli
 
+                  # Update package.json version to match the release tag
+                  # This ensures conventional-changelog uses the correct version
+                  VERSION="${{ steps.version.outputs.version }}"
+                  jq --arg v "$VERSION" '.version = $v' package.json > package.json.tmp && mv package.json.tmp package.json
+                  echo "Updated package.json version to: $VERSION"
+
                   # Get the previous tag
                   PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
 
@@ -133,13 +139,13 @@ jobs:
                   echo "=== RELEASE_NOTES.md ==="
                   cat RELEASE_NOTES.md
 
-            - name: Commit and push changelog
+            - name: Commit and push changelog and version bump
               run: |
-                  git add CHANGELOG.md
+                  git add CHANGELOG.md package.json
                   if git diff --staged --quiet; then
-                    echo "No changelog changes to commit"
+                    echo "No changes to commit"
                   else
-                    git commit -m "docs: update CHANGELOG.md for ${{ steps.version.outputs.tag }}"
+                    git commit -m "chore(release): ${{ steps.version.outputs.tag }}"
                     git push origin HEAD:main
                   fi
 
